@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fortnite Team System</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+  <style>
+    body { background:#111; color:white; font-family:sans-serif; text-align:center; }
+    input { padding:10px; margin:5px; }
+    button { padding:10px 20px; background:#4CAF50; color:white; border:none; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+
+<h1>Fortnite Team System</h1>
+
+<div id="login">
+  <input id="username" placeholder="ユーザー名"><br>
+  <input id="password" type="password" placeholder="パスワード"><br>
+  <button onclick="login()">ログイン</button>
+  <p id="loginError" style="color:red;"></p>
+</div>
+
+<div id="dashboard" class="hidden">
+  <h2>ダッシュボード</h2>
+  <p id="welcome"></p>
+  <button onclick="logout()">ログアウト</button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAVPOyHZLdID59cpOqwXYZSlrLmPpXXmKo",
+  authDomain: "fortnite-team-system.firebaseapp.com",
+  projectId: "fortnite-team-system",
+  storageBucket: "fortnite-team-system.firebasestorage.app",
+  messagingSenderId: "239748043839",
+  appId: "1:239748043839:web:ff4edfca0c19043e5ad48a",
+  measurementId: "G-P00239K9BL"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.login = async function() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const hash = CryptoJS.SHA256(password).toString();
+
+    const querySnapshot = await getDocs(collection(db, "Users"));
+    let found = false;
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.username === username && data.passwordHash === hash) {
+        found = true;
+        document.getElementById("login").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
+        document.getElementById("welcome").innerText = "ようこそ " + username;
+      }
+    });
+
+    if (!found) {
+      document.getElementById("loginError").innerText = "ログイン失敗";
+    }
+  }
+
+  window.logout = function() {
+    location.reload();
+  }
+</script>
+
+</body>
+</html>
