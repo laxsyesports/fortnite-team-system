@@ -4,42 +4,23 @@
 <meta charset="UTF-8">
 <title>Fortnite Team System</title>
 
-<style>
-body {
-  background:#111;
-  color:white;
-  font-family:sans-serif;
-  text-align:center;
-}
-input { padding:10px; margin:5px; }
-button {
-  padding:10px 20px;
-  background:#4CAF50;
-  color:white;
-  border:none;
-  cursor:pointer;
-}
-button:disabled { background:#777; }
-.hidden { display:none; }
+<!-- CryptoJS追加 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 
+<style>
+.hidden { display: none; }
 .spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #00ffcc;
-  border-radius: 50%;
   width: 30px;
   height: 30px;
+  border: 4px solid #ccc;
+  border-top: 4px solid #333;
+  border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 15px auto;
 }
 @keyframes spin {
-  0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 </style>
-
-<!-- CryptoJS -->
-<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
-
 </head>
 
 <body>
@@ -79,10 +60,7 @@ import {
 const firebaseConfig = {
   apiKey: "AIzaSyAVPOyHZLdID59cpOqwXYZSlrLmPpXXmKo",
   authDomain: "fortnite-team-system.firebaseapp.com",
-  projectId: "fortnite-team-system",
-  storageBucket: "fortnite-team-system.firebasestorage.app",
-  messagingSenderId: "239748043839",
-  appId: "1:239748043839:web:ff4edfca0c19043e5ad48a"
+  projectId: "fortnite-team-system"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -95,7 +73,6 @@ window.login = async function() {
   const errorText = document.getElementById("loginError");
 
   btn.disabled = true;
-  btn.innerText = "ログイン中...";
   loading.classList.remove("hidden");
   errorText.innerText = "";
 
@@ -110,7 +87,6 @@ window.login = async function() {
 
     const hash = CryptoJS.SHA256(password).toString();
 
-    // 🔎 usernameで検索
     const q = query(
       collection(db, "Users"),
       where("username", "==", username)
@@ -118,7 +94,6 @@ window.login = async function() {
 
     const snapshot = await getDocs(q);
 
-    console.log("入力username:", username);
     console.log("取得件数:", snapshot.size);
 
     if (snapshot.empty) {
@@ -129,7 +104,8 @@ window.login = async function() {
 
     snapshot.forEach((doc) => {
       const data = doc.data();
-      console.log("取得データ:", data);
+      console.log("DB passwordHash:", data.passwordHash);
+      console.log("入力hash:", hash);
 
       if (data.passwordHash === hash) {
         loginSuccess = true;
@@ -140,7 +116,7 @@ window.login = async function() {
       throw new Error("パスワードが違います");
     }
 
-    // ✅ ログイン成功
+    // ログイン成功
     document.getElementById("login").classList.add("hidden");
     document.getElementById("dashboard").classList.remove("hidden");
     document.getElementById("welcome").innerText = "ようこそ " + username;
@@ -148,9 +124,7 @@ window.login = async function() {
   } catch (err) {
 
     errorText.innerText = err.message;
-
     btn.disabled = false;
-    btn.innerText = "ログイン";
     loading.classList.add("hidden");
   }
 };
