@@ -1,29 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Fortnite Team System</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
-  <style>
-    body { background:#111; color:white; font-family:sans-serif; text-align:center; }
-    input { padding:10px; margin:5px; }
-    button { padding:10px 20px; background:#4CAF50; color:white; border:none; }
-    .hidden { display:none; }
-  </style>
+<meta charset="UTF-8">
+<title>Fortnite Team System</title>
+
+<!-- デザイン -->
+<style>
+body {
+  background:#111;
+  color:white;
+  font-family:sans-serif;
+  text-align:center;
+}
+
+input {
+  padding:10px;
+  margin:5px;
+}
+
+button {
+  padding:10px 20px;
+  background:#4CAF50;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+button:disabled {
+  background:#777;
+}
+
+.hidden {
+  display:none;
+}
+
+/* くるくる */
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #00ffcc;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 15px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+
+<!-- CryptoJS -->
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+
 </head>
+
 <body>
 
 <h1>Fortnite Team System</h1>
 
+<!-- ログイン画面 -->
 <div id="login">
   <input id="username" placeholder="ユーザー名"><br>
   <input id="password" type="password" placeholder="パスワード"><br>
-  <button onclick="login()">ログイン</button>
+
+  <button id="loginBtn" onclick="login()">ログイン</button>
+
+  <div id="loading" class="hidden">
+    <div class="spinner"></div>
+    <p>ログイン中です...</p>
+  </div>
+
   <p id="loginError" style="color:red;"></p>
 </div>
 
+<!-- ダッシュボード -->
 <div id="dashboard" class="hidden">
   <h2>ダッシュボード</h2>
   <p id="welcome"></p>
@@ -31,8 +83,9 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAVPOyHZLdID59cpOqwXYZSlrLmPpXXmKo",
@@ -40,16 +93,29 @@ const firebaseConfig = {
   projectId: "fortnite-team-system",
   storageBucket: "fortnite-team-system.firebasestorage.app",
   messagingSenderId: "239748043839",
-  appId: "1:239748043839:web:ff4edfca0c19043e5ad48a",
-  measurementId: "G-P00239K9BL"
+  appId: "1:239748043839:web:ff4edfca0c19043e5ad48a"
 };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  window.login = async function() {
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+window.login = async function() {
+
+  // UIロック
+  document.getElementById("loginBtn").disabled = true;
+  document.getElementById("loginBtn").innerText = "ログイン中...";
+  document.getElementById("loading").classList.remove("hidden");
+  document.getElementById("loginError").innerText = "";
+
+  try {
+
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!username || !password) {
+      throw new Error("入力してください");
+    }
+
     const hash = CryptoJS.SHA256(password).toString();
 
     const querySnapshot = await getDocs(collection(db, "Users"));
@@ -59,20 +125,34 @@ const firebaseConfig = {
       const data = doc.data();
       if (data.username === username && data.passwordHash === hash) {
         found = true;
-        document.getElementById("login").classList.add("hidden");
-        document.getElementById("dashboard").classList.remove("hidden");
-        document.getElementById("welcome").innerText = "ようこそ " + username;
       }
     });
 
-    if (!found) {
-      document.getElementById("loginError").innerText = "ログイン失敗";
-    }
-  }
+    if (found) {
+      document.getElementById("login").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+      document.getElementById("welcome").innerText = "ようこそ " + username;
 
-  window.logout = function() {
-    location.reload();
+      // ローディング消す
+      document.getElementById("loading").classList.add("hidden");
+    } else {
+      throw new Error("ログイン失敗");
+    }
+
+  } catch (error) {
+
+    document.getElementById("loginError").innerText = error.message;
+
+    document.getElementById("loginBtn").disabled = false;
+    document.getElementById("loginBtn").innerText = "ログイン";
+    document.getElementById("loading").classList.add("hidden");
   }
+}
+
+window.logout = function() {
+  location.reload();
+}
+
 </script>
 
 </body>
