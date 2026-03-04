@@ -110,34 +110,17 @@ window.login = async function() {
 
     const hash = CryptoJS.SHA256(password).toString();
 
-    const querySnapshot = await getDocs(collection(db, "Users"));
-
-console.log("取得件数:", snapshot.size);
-
-snapshot.forEach((doc) => {
-  console.log("doc.id:", doc.id);
-  console.log("doc.data():", doc.data());
-});
-querySnapshot.forEach((doc) => {
-  console.log("ドキュメントID:", doc.id);
-  console.log("中身:", doc.data());
-});
-    // 🔥 ユーザー名で絞り込み
+    // 🔎 usernameで検索
     const q = query(
       collection(db, "Users"),
       where("username", "==", username)
     );
 
-const snapshot = await getDocs(q);
+    const snapshot = await getDocs(q);
 
-console.log("入力されたusername:", username);
-console.log("取得件数:", snapshot.size);
+    console.log("入力username:", username);
+    console.log("取得件数:", snapshot.size);
 
-snapshot.forEach((doc) => {
-  console.log("doc.id:", doc.id);
-  console.log("doc.data():", doc.data());
-});
-  
     if (snapshot.empty) {
       throw new Error("ユーザーが存在しません");
     }
@@ -146,6 +129,8 @@ snapshot.forEach((doc) => {
 
     snapshot.forEach((doc) => {
       const data = doc.data();
+      console.log("取得データ:", data);
+
       if (data.passwordHash === hash) {
         loginSuccess = true;
       }
@@ -155,7 +140,7 @@ snapshot.forEach((doc) => {
       throw new Error("パスワードが違います");
     }
 
-    // 成功
+    // ✅ ログイン成功
     document.getElementById("login").classList.add("hidden");
     document.getElementById("dashboard").classList.remove("hidden");
     document.getElementById("welcome").innerText = "ようこそ " + username;
