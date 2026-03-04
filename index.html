@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Fortnite Team System</title>
 
-<!-- デザイン -->
 <style>
 body {
   background:#111;
@@ -12,12 +11,7 @@ body {
   font-family:sans-serif;
   text-align:center;
 }
-
-input {
-  padding:10px;
-  margin:5px;
-}
-
+input { padding:10px; margin:5px; }
 button {
   padding:10px 20px;
   background:#4CAF50;
@@ -25,16 +19,9 @@ button {
   border:none;
   cursor:pointer;
 }
+button:disabled { background:#777; }
+.hidden { display:none; }
 
-button:disabled {
-  background:#777;
-}
-
-.hidden {
-  display:none;
-}
-
-/* くるくる */
 .spinner {
   border: 4px solid #f3f3f3;
   border-top: 4px solid #00ffcc;
@@ -44,7 +31,6 @@ button:disabled {
   animation: spin 1s linear infinite;
   margin: 15px auto;
 }
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -60,11 +46,9 @@ button:disabled {
 
 <h1>Fortnite Team System</h1>
 
-<!-- ログイン画面 -->
 <div id="login">
   <input id="username" placeholder="ユーザー名"><br>
   <input id="password" type="password" placeholder="パスワード"><br>
-
   <button id="loginBtn" onclick="login()">ログイン</button>
 
   <div id="loading" class="hidden">
@@ -75,7 +59,6 @@ button:disabled {
   <p id="loginError" style="color:red;"></p>
 </div>
 
-<!-- ダッシュボード -->
 <div id="dashboard" class="hidden">
   <h2>ダッシュボード</h2>
   <p id="welcome"></p>
@@ -85,7 +68,13 @@ button:disabled {
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { 
+  getFirestore, 
+  collection, 
+  query, 
+  where, 
+  getDocs 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAVPOyHZLdID59cpOqwXYZSlrLmPpXXmKo",
@@ -101,11 +90,14 @@ const db = getFirestore(app);
 
 window.login = async function() {
 
-  // UIロック
-  document.getElementById("loginBtn").disabled = true;
-  document.getElementById("loginBtn").innerText = "ログイン中...";
-  document.getElementById("loading").classList.remove("hidden");
-  document.getElementById("loginError").innerText = "";
+  const btn = document.getElementById("loginBtn");
+  const loading = document.getElementById("loading");
+  const errorText = document.getElementById("loginError");
+
+  btn.disabled = true;
+  btn.innerText = "ログイン中...";
+  loading.classList.remove("hidden");
+  errorText.innerText = "";
 
   try {
 
@@ -118,40 +110,49 @@ window.login = async function() {
 
     const hash = CryptoJS.SHA256(password).toString();
 
-    const querySnapshot = await getDocs(collection(db, "Users"));
-    let found = false;
+    // 🔥 ユーザー名で絞り込み
+    const q = query(
+      collection(db, "Users"),
+      where("username", "==", username)
+    );
 
-    querySnapshot.forEach((doc) => {
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      throw new Error("ユーザーが存在しません");
+    }
+
+    let loginSuccess = false;
+
+    snapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.username === username && data.passwordHash === hash) {
-        found = true;
+      if (data.passwordHash === hash) {
+        loginSuccess = true;
       }
     });
 
-    if (found) {
-      document.getElementById("login").classList.add("hidden");
-      document.getElementById("dashboard").classList.remove("hidden");
-      document.getElementById("welcome").innerText = "ようこそ " + username;
-
-      // ローディング消す
-      document.getElementById("loading").classList.add("hidden");
-    } else {
-      throw new Error("ログイン失敗");
+    if (!loginSuccess) {
+      throw new Error("パスワードが違います");
     }
 
-  } catch (error) {
+    // 成功
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    document.getElementById("welcome").innerText = "ようこそ " + username;
 
-    document.getElementById("loginError").innerText = error.message;
+  } catch (err) {
 
-    document.getElementById("loginBtn").disabled = false;
-    document.getElementById("loginBtn").innerText = "ログイン";
-    document.getElementById("loading").classList.add("hidden");
+    errorText.innerText = err.message;
+
+    btn.disabled = false;
+    btn.innerText = "ログイン";
+    loading.classList.add("hidden");
   }
-}
+};
 
 window.logout = function() {
   location.reload();
-}
+};
 
 </script>
 
