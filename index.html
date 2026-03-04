@@ -92,7 +92,10 @@ window.login = async function() {
       where("username", "==", username)
     );
 
-    const snapshot = await getDocs(q);
+    snapshot.forEach((doc) => {
+  console.log("データ全体:", doc.data());
+  console.log("username型:", typeof doc.data().username);
+});
 
     console.log("取得件数:", snapshot.size);
 
