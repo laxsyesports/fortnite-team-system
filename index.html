@@ -128,7 +128,7 @@ querySnapshot.forEach((doc) => {
       where("username", "==", username)
     );
 
-   const snapshot = await getDocs(q);
+const snapshot = await getDocs(q);
 
 console.log("入力されたusername:", username);
 console.log("取得件数:", snapshot.size);
@@ -137,6 +137,7 @@ snapshot.forEach((doc) => {
   console.log("doc.id:", doc.id);
   console.log("doc.data():", doc.data());
 });
+  
     if (snapshot.empty) {
       throw new Error("ユーザーが存在しません");
     }
