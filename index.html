@@ -110,6 +110,14 @@ window.login = async function() {
 
     const hash = CryptoJS.SHA256(password).toString();
 
+    const querySnapshot = await getDocs(collection(db, "Users"));
+
+console.log("取得件数:", querySnapshot.size);
+
+querySnapshot.forEach((doc) => {
+  console.log("ドキュメントID:", doc.id);
+  console.log("中身:", doc.data());
+});
     // 🔥 ユーザー名で絞り込み
     const q = query(
       collection(db, "Users"),
