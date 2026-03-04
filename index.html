@@ -118,6 +118,8 @@ window.login = async function() {
 
     const snapshot = await getDocs(q);
 
+console.log("入力されたusername:", username);
+console.log("取得データ:", snapshot);
     if (snapshot.empty) {
       throw new Error("ユーザーが存在しません");
     }
