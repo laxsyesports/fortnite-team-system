@@ -112,8 +112,12 @@ window.login = async function() {
 
     const querySnapshot = await getDocs(collection(db, "Users"));
 
-console.log("取得件数:", querySnapshot.size);
+console.log("取得件数:", snapshot.size);
 
+snapshot.forEach((doc) => {
+  console.log("doc.id:", doc.id);
+  console.log("doc.data():", doc.data());
+});
 querySnapshot.forEach((doc) => {
   console.log("ドキュメントID:", doc.id);
   console.log("中身:", doc.data());
